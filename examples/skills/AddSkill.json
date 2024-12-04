@@ -1,0 +1,27 @@
+{
+    "strName": "AddSkill",
+    "strType": "Add",
+    "strGroup": "",
+    "strDescription": "Skill to add two values",
+    "iParameterCount": 3,
+    "astParameters": [
+        {
+            "strName": "Operant1",
+            "strValue": "0.0",
+            "strUnit": "",
+            "strDescr": ""
+        },
+        {
+            "strName": "Operant2",
+            "strValue": "0.0",
+            "strUnit": "",
+            "strDescr": ""
+        },
+        {
+            "strName": "Result",
+            "strValue": "0.0",
+            "strUnit": "",
+            "strDescr": ""
+        }
+    ]
+}

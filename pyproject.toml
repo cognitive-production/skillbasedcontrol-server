@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "setuptools-git-versioning"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sbc_server"
+description='SkillBasedControlFramework in python. Provides python skills via opc ua server'
+dynamic  =["version"]
+requires-python = ">=3.10"
+readme = 'README.md'
+license = {file = "LICENSE"}
+dependencies= [ 'asyncua==1.1.*',
+                'sbc_statemachine @ git+https://gitlab.cc-asp.fraunhofer.de/cpps/skillbasedcontrolframework/python_skillstatemachine@1.0.x'
+                ]
+
+[tools.setuptools]
+packages = ['sbc_server']
+
+[project.optional-dependencies]
+docs=[  "sphinx",
+        "sphinx-rtd-theme"]
+
+[tool.setuptools-git-versioning]
+enabled = true

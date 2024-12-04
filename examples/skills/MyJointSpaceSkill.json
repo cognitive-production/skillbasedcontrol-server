@@ -1,0 +1,45 @@
+{
+    "strName": "MyJointSpaceSkill",
+    "strType": "JointSpace",
+    "strGroup": "",
+    "strDescription": "Move robot in jointspace",
+    "iParameterCount": 6,
+    "astParameters": [
+        {
+            "strName": "q1",
+            "strValue": "0.0",
+            "strUnit": "rad",
+            "strDescr": "Angle in radiant for axis 1"
+        },
+        {
+            "strName": "q2",
+            "strValue": "0.0",
+            "strUnit": "rad",
+            "strDescr": "Angle in radiant for axis 2"
+        },
+        {
+            "strName": "q3",
+            "strValue": "0.0",
+            "strUnit": "rad",
+            "strDescr": "Angle in radiant for axis 3"
+        },
+        {
+            "strName": "q4",
+            "strValue": "0.0",
+            "strUnit": "rad",
+            "strDescr": "Angle in radiant for axis 4"
+        },
+        {
+            "strName": "q5",
+            "strValue": "0.0",
+            "strUnit": "rad",
+            "strDescr": "Angle in radiant for axis 5"
+        },
+        {
+            "strName": "q6",
+            "strValue": "0.0",
+            "strUnit": "rad",
+            "strDescr": "Angle in radiant for axis 6"
+        }
+    ]
+}
