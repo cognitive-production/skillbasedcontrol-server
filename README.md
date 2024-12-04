@@ -11,13 +11,13 @@ For detailed information on the Module Type Package (MTP), see:
 ## How to pip install
 #### with existing python evnironment:
 ```
-pip install git+https://github.com/cognitive-production/swap-it-module-server
+pip install git+https://github.com/cognitive-production/skillbasedcontrol-server
 ```
 #### with new conda environment:
 ```
 conda create -n sbc-server python=3.10
 conda activate sbc-server
-pip install git+https://github.com/cognitive-production/swap-it-module-server
+pip install git+https://github.com/cognitive-production/skillbasedcontrol-server
 ```
 
 ## How to use
@@ -42,7 +42,7 @@ For class overview, see [classdiagram](docs/classdiagram.md).
 
 ## Release Notes
 
-### [1.0.0](https://github.com/cognitive-production/swap-it-module-server/releases/tag/1.0.0) (2024-12-04)
+### [1.0.0](https://github.com/cognitive-production/skillbasedcontrol-server/releases/tag/1.0.0) (2024-12-04)
 > Stable release on github.
 
 ### Upgrade Steps
