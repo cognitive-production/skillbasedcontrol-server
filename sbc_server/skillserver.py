@@ -4,8 +4,6 @@ import logging
 from .skillruntimethread import SkillRuntimeThread, BaseSkill
 from .cycletimer import CycleTimer
 
-BASE_SLEEP_TIME_TICK = 0.05
-
 
 class SkillServer(threading.Thread):
     """Base server class holding and running skills"""
@@ -14,7 +12,7 @@ class SkillServer(threading.Thread):
         self,
         skills: list[BaseSkill],
         skill_cycletime: float = 0.5,
-        server_cycletime: float = 1.0,
+        server_cycletime: float = 0.1,
         server_name: str = "SkillServer",
         logger: logging.Logger = None,
         **kwargs,
@@ -24,7 +22,7 @@ class SkillServer(threading.Thread):
         Args:
             skills (list[BaseSkill]): instance objects of all skills to run
             skill_cycletime (float, optional): skill runtime thread cycletime. Defaults to 0.5.
-            server_cycletime (float, optional): server cycletime. Defaults to 1.0.
+            server_cycletime (float, optional): server cycletime. Will be set to skill_cycletime/2 if longer! Defaults to 1.0.
             server_name (str, optional): server name. Defaults to "SkillServer".
             logger (logging.Logger, optional): logger for logging. Defaults to None.
             **kwargs (): additional arguments for threading.Thread.__init__
@@ -34,8 +32,9 @@ class SkillServer(threading.Thread):
         """
         self.server_name = server_name
         super().__init__(name=f"{server_name}_Thread", **kwargs)
-        # set base sleep time tick for waiting cycles dependant to skill_cycletime
-        self.base_sleep_time_tick = min(BASE_SLEEP_TIME_TICK, skill_cycletime / 2.0)
+        # set server_cycletime dependant to skill_cycletime
+        if server_cycletime >= skill_cycletime:
+            server_cycletime = skill_cycletime / 2.0
         self.server_cycletime = server_cycletime
         # generate skill runtime threads
         self.skill_runtime_threads: dict[str, SkillRuntimeThread] = {}

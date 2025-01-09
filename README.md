@@ -42,26 +42,34 @@ For class overview, see [classdiagram](docs/classdiagram.md).
 
 ## Release Notes
 
-### [1.0.0](https://github.com/cognitive-production/skillbasedcontrol-server/releases/tag/1.0.0) (2024-12-04)
-> Stable release on github.
+### [1.0.2](https://github.com/cognitive-production/skillbasedcontrol-server/releases/tag/1.0.2) (2025-01-09)
+#### [Changes to 1.0.0](https://github.com/cognitive-production/skillbasedcontrol-server/compare/1.0.0...1.0.2)
+> fix "over-write bug" when skills run "too fast" in skillserver_opcua; implement PythonFunctionExecuteSkill
+
 
 ### Upgrade Steps
 * see "How to pip install"
 
 #### Breaking Changes
-* Stable release on github.
+* None
 
 #### New Features
-* None
+* implement PythonFunctionExecuteSkill in skillimplementations
 
 #### Bug Fixes
-* None
+* fix over-write bug when skills run "too fast" in skillserver_opcua
 
 #### Performance Improvements
 * None
 
 #### Other Changes
-* None
+* extend example with custom python function and PythonFunctionExecuteSkill
+* fix links in README
+---
+### [1.0.0](https://github.com/cognitive-production/skillbasedcontrol-server/releases/tag/1.0.0) (2024-12-04)
+> Stable release on github.
+---
+
 
 ## License
 MIT License, see [LICENSE](LICENSE)

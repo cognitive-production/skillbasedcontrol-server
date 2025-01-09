@@ -9,6 +9,7 @@ from sbc_server.baseskill import BaseSkill
 from sbc_server.skillimplementations import (
     DelayedSkill,
     ExternalExecuteSkill,
+    PythonFunctionExecuteSkill,
 )
 
 # examples for custom skill implementations
@@ -24,17 +25,20 @@ class AddSkill(BaseSkill):
         super().__init__(data=data, logger=logger)
 
     def S02_Execute_Execute(self):
+        op1 = float(self.data.get_Parameter_byName("Operant1", False).strValue)
+        print(f"{op1=}")
+        op2 = float(self.data.get_Parameter_byName("Operant2", False).strValue)
+        print(f"{op2=}")
+        param_result = self.data.get_Parameter_byName("Result", False)
         try:
-            op1 = float(self.data.stSkillDataCommand.astParameters[0].strValue)
-            op2 = float(self.data.stSkillDataCommand.astParameters[1].strValue)
             result = op1 + op2
-            self.data.stSkillDataCommand.astParameters[2].strValue = str(result)
+            param_result.strValue = str(result)
             if self.logger:
                 self.logger.info(
                     f"Executed AddSkill operation: {op1} + {op2} = {result}"
                 )
         except Exception as e:
-            self.data.stSkillDataCommand.astParameters[2].strValue = ""
+            param_result.strValue = ""
             self.data.stSkillState.strErrorMsg = (
                 f"Executed AddSkill finished with error: {e}"
             )
@@ -78,9 +82,9 @@ class GripperSkill(DelayedSkill):
         super().__init__(data=stSkillDataHandle, delaytime=1.0, logger=logger)
 
     def S02_Execute_Execute(self):
-        grip_release = self.data.stSkillDataCommand.astParameters[0].strValue
-        grip_range = self.data.stSkillDataCommand.astParameters[1].strValue
-        grip_force = self.data.stSkillDataCommand.astParameters[2].strValue
+        grip_release = self.data.get_Parameter_byName("Grip_Release", False).strValue
+        grip_range = self.data.get_Parameter_byName("Grip_Range", False).strValue
+        grip_force = self.data.get_Parameter_byName("Grip_Force", False).strValue
         match grip_release:
             case "0":
                 if self.logger:
@@ -116,7 +120,7 @@ class MovePosByJsonStringSkill(DelayedSkill):
         super().__init__(data=stSkillDataHandle, delaytime=1.0, logger=logger)
 
     def S02_Execute_Execute(self):
-        posString = self.data.stSkillDataCommand.astParameters[0].strValue
+        posString = self.data.get_Parameter_byName("PositionString", False).strValue
         if self.logger:
             self.logger.info(
                 f"{self.data.stSkillDataDefault.strName}: Moving to {posString}."
@@ -143,7 +147,9 @@ class SleepSkill(BaseSkill):
     def S02_Execute_Execute(self):
         sleeptime = 1.0
         try:
-            sleeptime = float(self.data.stSkillDataCommand.astParameters[0].strValue)
+            sleeptime = float(
+                self.data.get_Parameter_byName("Sleeptime", False).strValue
+            )
             time.sleep(sleeptime)
         except Exception as e:
             print(f"SleepSkill exception: {e}")
@@ -199,3 +205,24 @@ class CustomExternalExecuteSkill(ExternalExecuteSkill):
         stSkillDataHandle = SkillDataHandle("CustomExternalExecuteSkill")
         stSkillDataHandle.stSkillDataDefault.iParameterCount = 0
         super().__init__(stSkillDataHandle, logger)
+
+
+def custom_python_function1(Op1: str = "Test", Op2: float = 1.0, Op3: int = 2) -> str:
+    """custom_python_function1. Input string, float and int. Returns string."""
+    ret = f"{Op1=}_{Op2=}_{Op3=}"
+    print(ret)
+    return ret
+
+
+def custom_python_function2(
+    Op1: str = "Test", Op2: float = 1.0, Op3: int = 2
+) -> tuple[str, int, float]:
+    """custom_python_function2. Input string, float and int. Returns tuple."""
+    ret = (Op1, Op3, Op2)
+    print(ret)
+    return ret
+
+
+def custom_python_function3() -> str:
+    """custom_python_function3. Returns string."""
+    return "custom_python_function3"

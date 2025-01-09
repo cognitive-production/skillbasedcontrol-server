@@ -12,7 +12,7 @@ from sbc_statemachine.skilldatatypes import (
     ST_Parameter,
     ST_Base,
 )
-from .mapVar import mapVar
+from .mapVar import mapVar, copy
 from .skillserver import SkillServer
 from .baseskill import BaseSkill
 
@@ -31,6 +31,12 @@ class Skill_Node_Handle:
     skill_State_node: SyncNode = None
     skill_DataDefault_node: SyncNode = None
     skill_DataCommand_node: SyncNode = None
+    stSkillCommand_marker: ST_SkillCommand = dataclasses.field(
+        default_factory=ST_SkillCommand
+    )
+    stSkillDataCommand_marker: ST_SkillData = dataclasses.field(
+        default_factory=ST_SkillData
+    )
 
 
 class SkillServer_OPCUA(SkillServer):
@@ -38,7 +44,7 @@ class SkillServer_OPCUA(SkillServer):
         self,
         skills: list[BaseSkill],
         skill_cycletime: float = 0.5,
-        server_cycletime: float = 1.0,
+        server_cycletime: float = 0.1,
         server_name: str = "BaseSkilldControl OPC UA Server",
         hostname: str = "0.0.0.0",
         port: int = 4840,
@@ -51,7 +57,7 @@ class SkillServer_OPCUA(SkillServer):
         Args:
             skills (list[BaseSkill]): instance objects of all skills to run
             skill_cycletime (float, optional): skill runtime thread cycletime. Defaults to 0.5.
-            server_cycletime (float, optional): server cycletime. Defaults to 1.0.
+            server_cycletime (float, optional): server cycletime. Will be set to skill_cycletime/2 if longer! Defaults to 0.1.
             server_name (str, optional): opc ua server name. Defaults to "BaseSkilldControl OPC UA Server".
             hostname (str, optional): hostname like ip. Defaults to "0.0.0.0".
             port (int, optional): opc ua server port. Defaults to 4840.
@@ -72,6 +78,7 @@ class SkillServer_OPCUA(SkillServer):
         self.server_name = server_name
         self.server = Server()  # create opc ua server
         self.skillNodeHandles = self._init_skill_node_handles(skills)
+        # write_change_struct_markers
         self.namespaceIndex = namespaceIndex
 
     def _init_skill_node_handles(
@@ -93,7 +100,11 @@ class SkillServer_OPCUA(SkillServer):
             skill_name = skill.data.stSkillDataDefault.strName
             if skill_name in skill_nodehandles:
                 raise KeyError(f"Skill with name '{skill_name}' already registered!")
-            skill_nodehandles[skill_name] = Skill_Node_Handle(skill_name=skill_name)
+            skill_nodehandles[skill_name] = Skill_Node_Handle(
+                skill_name=skill_name,
+                stSkillCommand_marker=copy.deepcopy(skill.data.stSkillCommand),
+                stSkillDataCommand_marker=copy.deepcopy(skill.data.stSkillDataCommand),
+            )
         return skill_nodehandles
 
     def start_server(self):
@@ -126,7 +137,9 @@ class SkillServer_OPCUA(SkillServer):
                 self.logger.info(f"Added skill '{skill_name}' to OPC UA Server.")
         # write skill data
         for skill_name in self.skill_runtime_threads:
-            self.write_skill_data(self.skill_runtime_threads[skill_name].skill)
+            self.write_skill_data_force(
+                self.skill_runtime_threads[skill_name].skill, True
+            )
         if self.logger:
             self.logger.info(
                 f"Added skill nodes to OPC UA Server '{self.server_name}' with endpoint 'opc.tcp://{self.hostname}:{self.port}'."
@@ -199,9 +212,17 @@ class SkillServer_OPCUA(SkillServer):
         # stSkillCommand
         d = skill_node_handle.skill_Command_node.read_value()
         mapVar(d, skill.data.stSkillCommand)
+        # mark stSkillCommand
+        skill_node_handle.stSkillCommand_marker = copy.deepcopy(
+            skill.data.stSkillCommand
+        )
         # stSkillDataCommand
         d = skill_node_handle.skill_DataCommand_node.read_value()
         mapVar(d, skill.data.stSkillDataCommand)
+        # mark stSkillDataCommand
+        skill_node_handle.stSkillDataCommand_marker = copy.deepcopy(
+            skill.data.stSkillDataCommand
+        )
 
     def write_skill_data(self, skill: BaseSkill) -> None:
         """write skill data to opc ua server nodes
@@ -209,14 +230,26 @@ class SkillServer_OPCUA(SkillServer):
         Args:
             skill_name (str): name of skill
         """
+        self.write_skill_data_force(skill)
+
+    def write_skill_data_force(self, skill: BaseSkill, force: bool = False) -> None:
+        """write skill data to opc ua server nodes with force option
+
+        Args:
+            skill_name (str): name of skill
+        """
         skill_name = skill.data.stSkillDataDefault.strName
         skill_node_handle = self.skillNodeHandles[skill_name]
-        # stSkillCommand
-        d = OPCUA_Types[ST_SkillCommand]()
-        mapVar(skill.data.stSkillCommand, d)
-        skill_node_handle.skill_Command_node.write_value(
-            d, ua.VariantType.ExtensionObject
-        )
+        # stSkillCommand, only if changed since last read_skill_data
+        if (
+            force
+            or skill.data.stSkillCommand != skill_node_handle.stSkillCommand_marker
+        ):
+            d = OPCUA_Types[ST_SkillCommand]()
+            mapVar(skill.data.stSkillCommand, d)
+            skill_node_handle.skill_Command_node.write_value(
+                d, ua.VariantType.ExtensionObject
+            )
         # stSkillState
         d = OPCUA_Types[ST_SkillState]()
         mapVar(skill.data.stSkillState, d)
@@ -235,17 +268,22 @@ class SkillServer_OPCUA(SkillServer):
         skill_node_handle.skill_DataDefault_node.write_value(
             d, ua.VariantType.ExtensionObject
         )
-        # stSkillDataCommand
-        d = OPCUA_Types[ST_SkillData]()
-        if skill.data.stSkillDataDefault.iParameterCount > 0:
-            d.astParameters = [
-                OPCUA_Types[ST_Parameter]()
-                for _ in range(skill.data.stSkillDataDefault.iParameterCount)
-            ]
-        mapVar(skill.data.stSkillDataCommand, d)
-        skill_node_handle.skill_DataCommand_node.write_value(
-            d, ua.VariantType.ExtensionObject
-        )
+        # stSkillDataCommand, only if changed since last read_skill_data
+        if (
+            force
+            or skill.data.stSkillDataCommand
+            != skill_node_handle.stSkillDataCommand_marker
+        ):
+            d = OPCUA_Types[ST_SkillData]()
+            if skill.data.stSkillDataDefault.iParameterCount > 0:
+                d.astParameters = [
+                    OPCUA_Types[ST_Parameter]()
+                    for _ in range(skill.data.stSkillDataDefault.iParameterCount)
+                ]
+            mapVar(skill.data.stSkillDataCommand, d)
+            skill_node_handle.skill_DataCommand_node.write_value(
+                d, ua.VariantType.ExtensionObject
+            )
 
 
 def register_skill_type_to_asyncua_server(

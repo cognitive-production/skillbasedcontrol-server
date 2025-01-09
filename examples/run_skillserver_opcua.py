@@ -23,13 +23,22 @@ def main():
         MultiReturnSkill(logger=logger),
         MyJointSpaceSkill(logger=logger),
         CustomExternalExecuteSkill(logger=logger),
+        PythonFunctionExecuteSkill(
+            python_function=custom_python_function1, logger=logger
+        ),
+        PythonFunctionExecuteSkill(
+            python_function=custom_python_function2, logger=logger
+        ),
+        PythonFunctionExecuteSkill(
+            python_function=custom_python_function3, logger=logger
+        ),
     ]
 
     # 3. create skillserver object and inject custom skill objects
     skill_server_OPCUA = SkillServer_OPCUA_VC(
         skills,
-        skill_cycletime=0.1,
-        server_cycletime=0.5,
+        skill_cycletime=0.01,
+        server_cycletime=0.01,
         port=4841,
         logger=logger,
     )
